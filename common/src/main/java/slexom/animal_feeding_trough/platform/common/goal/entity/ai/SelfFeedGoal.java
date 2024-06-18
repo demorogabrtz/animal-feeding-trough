@@ -1,41 +1,41 @@
 package slexom.animal_feeding_trough.platform.common.goal.entity.ai;
 
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.ai.goal.MoveToTargetPosGoal;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.ai.goal.MoveToBlockGoal;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import slexom.animal_feeding_trough.platform.common.block.entity.FeedingTroughBlockEntity;
 
 import java.util.function.Predicate;
 
-public class SelfFeedGoal extends MoveToTargetPosGoal {
+public class SelfFeedGoal extends MoveToBlockGoal {
 
-    protected final AnimalEntity mob;
+    protected final Animal mob;
     private final Predicate<ItemStack> foodPredicate;
 
     private FeedingTroughBlockEntity feeder;
 
-    public SelfFeedGoal(AnimalEntity mob, double speed, Predicate<ItemStack> foodPredicate) {
+    public SelfFeedGoal(Animal mob, double speed, Predicate<ItemStack> foodPredicate) {
         super(mob, speed, 8);
         this.mob = mob;
         this.foodPredicate = foodPredicate;
     }
 
     @Override
-    public boolean canStart() {
-        return this.mob.canEat() && this.mob.getBreedingAge() == 0 && super.canStart();
+    public boolean canUse() {
+        return this.mob.canFallInLove() && this.mob.getAge() == 0 && super.canUse();
     }
 
     @Override
-    public boolean shouldContinue() {
-        return super.shouldContinue() && this.feeder != null && this.mob.canEat() && this.mob.getBreedingAge() == 0;
+    public boolean canContinueToUse() {
+        return super.canContinueToUse() && this.feeder != null && this.mob.canFallInLove() && this.mob.getAge() == 0;
     }
 
     @Override
-    public double getDesiredDistanceToTarget() {
+    public double acceptedDistance() {
         return 2.0D;
     }
 
@@ -44,7 +44,7 @@ public class SelfFeedGoal extends MoveToTargetPosGoal {
     }
 
     @Override
-    protected boolean isTargetPos(WorldView world, BlockPos pos) {
+    protected boolean isValidTarget(LevelReader world, BlockPos pos) {
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (blockEntity instanceof FeedingTroughBlockEntity feedingTroughBlockEntity) {
             ItemStack itemStack = feedingTroughBlockEntity.getItems().get(0);
@@ -58,13 +58,13 @@ public class SelfFeedGoal extends MoveToTargetPosGoal {
 
     @Override
     public void tick() {
-        World world = this.mob.getWorld();
-        if (!world.isClient && this.feeder != null && this.mob.canEat()) {
+        Level world = this.mob.level();
+        if (!world.isClientSide && this.feeder != null && this.mob.canFallInLove()) {
             if (!this.feeder.getItems().get(0).isEmpty()) {
-                this.mob.getLookControl().lookAt((double) this.targetPos.getX() + 0.5D, this.targetPos.getY(), (double) this.targetPos.getZ() + 0.5D, 10.0F, (float) this.mob.getMaxLookPitchChange());
-                if (this.hasReached()) {
-                    this.feeder.getItems().get(0).decrement(1);
-                    this.mob.lovePlayer(null);
+                this.mob.getLookControl().setLookAt((double) this.blockPos.getX() + 0.5D, this.blockPos.getY(), (double) this.blockPos.getZ() + 0.5D, 10.0F, (float) this.mob.getMaxHeadXRot());
+                if (this.isReachedTarget()) {
+                    this.feeder.getItems().get(0).shrink(1);
+                    this.mob.setInLove(null);
                 }
             }
             this.feeder = null;

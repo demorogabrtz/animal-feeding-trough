@@ -3,7 +3,7 @@ plugins {
 }
 
 loom {
-    accessWidenerPath.set(project(":common").file("src/main/resources/animal_feeding_trough.accesswidener"))
+    // accessWidenerPath.set(project(":common").file("src/main/resources/animal_feeding_trough.accesswidener"))
 }
 
 architectury {

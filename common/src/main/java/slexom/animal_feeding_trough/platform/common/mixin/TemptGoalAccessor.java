@@ -1,8 +1,8 @@
 package slexom.animal_feeding_trough.platform.common.mixin;
 
-import net.minecraft.entity.ai.goal.TemptGoal;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.TemptGoal;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
@@ -12,12 +12,12 @@ import java.util.function.Predicate;
 public interface TemptGoalAccessor {
 
     @Accessor("mob")
-    public PathAwareEntity getMob();
+    PathfinderMob getMob();
 
-    @Accessor("speed")
-    public double getSpeed();
+    @Accessor("speedModifier")
+    double getSpeed();
 
-    @Accessor("foodPredicate")
-    public Predicate<ItemStack> getFoodPredicate();
+    @Accessor("items")
+    Predicate<ItemStack> getFoodPredicate();
 
 }

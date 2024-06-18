@@ -8,7 +8,7 @@ dependencies {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/animal_feeding_trough.accesswidener")
+    // accessWidenerPath = file("src/main/resources/animal_feeding_trough.accesswidener")
 }
 
 architectury {

@@ -5,19 +5,19 @@ import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.Registrar;
 import dev.architectury.registry.registries.RegistrarManager;
 import dev.architectury.registry.registries.RegistrySupplier;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.MapColor;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.enums.Instrument;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroups;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.resource.featuretoggle.FeatureFlags;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import net.minecraft.world.level.material.MapColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import slexom.animal_feeding_trough.platform.common.block.FeedingTroughBlock;
@@ -34,14 +34,14 @@ public class AnimalFeedingTroughMod {
 
     public static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(MOD_ID));
 
-    public static final Registrar<Block> BLOCK_REGISTRAR = REGISTRIES.get().get(RegistryKeys.BLOCK);
-    public static final Registrar<Item> ITEM_REGISTRAR = REGISTRIES.get().get(RegistryKeys.ITEM);
-    public static final Registrar<BlockEntityType<?>> BLOCK_ENTITY_TYPE_REGISTRAR = REGISTRIES.get().get(RegistryKeys.BLOCK_ENTITY_TYPE);
-    public static final Registrar<ScreenHandlerType<?>> SCREEN_HANDLER_TYPE_REGISTRAR = REGISTRIES.get().get(RegistryKeys.SCREEN_HANDLER);
+    public static final Registrar<Block> BLOCK_REGISTRAR = REGISTRIES.get().get(Registries.BLOCK);
+    public static final Registrar<Item> ITEM_REGISTRAR = REGISTRIES.get().get(Registries.ITEM);
+    public static final Registrar<BlockEntityType<?>> BLOCK_ENTITY_TYPE_REGISTRAR = REGISTRIES.get().get(Registries.BLOCK_ENTITY_TYPE);
+    public static final Registrar<MenuType<?>> SCREEN_HANDLER_TYPE_REGISTRAR = REGISTRIES.get().get(Registries.MENU);
 
-    public static final Identifier REGISTRY_NAME = new Identifier(AnimalFeedingTroughMod.MOD_ID, "feeding_trough");
-    public static RegistrySupplier<Block> FEEDING_TROUGH_BLOCK = BLOCK_REGISTRAR.register(REGISTRY_NAME, () -> new FeedingTroughBlock(AbstractBlock.Settings.create().mapColor(MapColor.OAK_TAN).instrument(Instrument.BASS).strength(0.2f).sounds(BlockSoundGroup.WOOD).burnable().nonOpaque()));
-    public static RegistrySupplier<BlockItem> FEEDING_TROUGH_BLOCK_ITEM = ITEM_REGISTRAR.register(REGISTRY_NAME, () -> new BlockItem(FEEDING_TROUGH_BLOCK.get(), new Item.Settings().arch$tab(ItemGroups.TOOLS)));
+    public static final ResourceLocation REGISTRY_NAME = ResourceLocation.fromNamespaceAndPath(AnimalFeedingTroughMod.MOD_ID, "feeding_trough");
+    public static RegistrySupplier<Block> FEEDING_TROUGH_BLOCK = BLOCK_REGISTRAR.register(REGISTRY_NAME, () -> new FeedingTroughBlock(BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).instrument(NoteBlockInstrument.BASS).strength(0.2f).sound(SoundType.WOOD).ignitedByLava().noOcclusion()));
+    public static RegistrySupplier<BlockItem> FEEDING_TROUGH_BLOCK_ITEM = ITEM_REGISTRAR.register(REGISTRY_NAME, () -> new BlockItem(FEEDING_TROUGH_BLOCK.get(), new Item.Properties().arch$tab(CreativeModeTabs.TOOLS_AND_UTILITIES)));
 
     public static void onInitialize() {
         LOGGER.info("[Animal Feeding Trough] Load Complete! Enjoy :D");
@@ -51,9 +51,9 @@ public class AnimalFeedingTroughMod {
         MenuRegistry.registerScreenFactory(FEEDING_TROUGH_SCREEN_HANDLER.get(), FeedingTroughScreen::new);
     }
 
-    public static RegistrySupplier<ScreenHandlerType<FeedingTroughScreenHandler>> FEEDING_TROUGH_SCREEN_HANDLER = SCREEN_HANDLER_TYPE_REGISTRAR.register(REGISTRY_NAME, () -> new ScreenHandlerType<FeedingTroughScreenHandler>(FeedingTroughScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
+    public static RegistrySupplier<MenuType<FeedingTroughScreenHandler>> FEEDING_TROUGH_SCREEN_HANDLER = SCREEN_HANDLER_TYPE_REGISTRAR.register(REGISTRY_NAME, () -> new MenuType<>(FeedingTroughScreenHandler::new, FeatureFlags.VANILLA_SET));
 
 
-    public static RegistrySupplier<BlockEntityType<FeedingTroughBlockEntity>> FEEDING_TROUGH_BLOCK_ENTITY = BLOCK_ENTITY_TYPE_REGISTRAR.register(REGISTRY_NAME, () -> BlockEntityType.Builder.create(FeedingTroughBlockEntity::new, FEEDING_TROUGH_BLOCK.get()).build(null));
+    public static RegistrySupplier<BlockEntityType<FeedingTroughBlockEntity>> FEEDING_TROUGH_BLOCK_ENTITY = BLOCK_ENTITY_TYPE_REGISTRAR.register(REGISTRY_NAME, () -> BlockEntityType.Builder.of(FeedingTroughBlockEntity::new, FEEDING_TROUGH_BLOCK.get()).build(null));
 
 }

@@ -10,7 +10,7 @@ architectury {
 version = "${rootProject.mod_version}+${rootProject.minecraft_version}-neoforge"
 
 loom {
-    accessWidenerPath.set(project(":common").file("src/main/resources/animal_feeding_trough.accesswidener"))
+    // accessWidenerPath.set(project(":common").file("src/main/resources/animal_feeding_trough.accesswidener"))
 }
 
 configurations {
@@ -48,18 +48,18 @@ dependencies {
 }
 
 processResources {
-    inputs.property "version", project.version
-    inputs.property "minecraftVersion", project.minecraft_version
-    inputs.property "architecturyVersion", project.architectury_api_version
-    inputs.property "neoForgeVersion", project.neoforge_version
+    var replaceProperties = [
+            minecraftVersion    : project.minecraft_version,
+            architecturyVersion : project.architectury_api_version,
+            neoForgeVersion     : project.neoforge_version,
+            version             : project.version,
+    ]
+    inputs.properties replaceProperties
 
-
-    filesMatching("META-INF/mods.toml") {
-        expand "version": project.version,
-               "minecraftVersion": project.minecraft_version,
-               "architecturyVersion": project.architectury_api_version,
-               "neoForgeVersion": project.neoforge_version
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
     }
+
 }
 
 shadowJar {

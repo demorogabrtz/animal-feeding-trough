@@ -1,36 +1,45 @@
 package slexom.animal_feeding_trough.platform.common.block;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.IntProperty;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ItemActionResult;
-import net.minecraft.util.ItemScatterer;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 import slexom.animal_feeding_trough.platform.common.AnimalFeedingTroughMod;
 import slexom.animal_feeding_trough.platform.common.block.entity.FeedingTroughBlockEntity;
 
-public class FeedingTroughBlock extends BlockWithEntity {
-    public static final IntProperty LEVEL = IntProperty.of("level", 0, 4);
-    public static final MapCodec<FeedingTroughBlock> CODEC = createCodec(FeedingTroughBlock::new);
-    private static final VoxelShape SHAPE = Block.createCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 9.0D, 16.0D);
+public class FeedingTroughBlock extends BaseEntityBlock {
+    public static final IntegerProperty LEVEL = IntegerProperty.create("level", 0, 4);
+    public static final MapCodec<FeedingTroughBlock> CODEC = simpleCodec(FeedingTroughBlock::new);
+    private static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 9.0D, 16.0D);
 
-    public FeedingTroughBlock(Settings settings) {
+    public FeedingTroughBlock(Properties settings) {
         super(settings);
-        this.setDefaultState(this.stateManager.getDefaultState().with(LEVEL, 0));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LEVEL, 0));
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 
     public MapCodec<FeedingTroughBlock> getCodec() {
@@ -38,78 +47,78 @@ public class FeedingTroughBlock extends BlockWithEntity {
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateManager) {
         stateManager.add(LEVEL);
     }
 
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
         return SHAPE;
     }
 
     @Override
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
     }
 
-    protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (blockEntity instanceof FeedingTroughBlockEntity feedingTroughBlockEntity) {
-            if (player.isSneaking() && player.getStackInHand(hand).isEmpty()) {
+            if (player.isShiftKeyDown() && player.getItemInHand(hand).isEmpty()) {
                 feedingTroughBlockEntity.dropStoredXp(world, player);
 
-                return ItemActionResult.success(world.isClient);
+                return ItemInteractionResult.sidedSuccess(world.isClientSide);
             }
         }
 
-        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-        if (world.isClient) {
-            return ActionResult.SUCCESS;
+    public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
+        if (world.isClientSide) {
+            return InteractionResult.SUCCESS;
         } else {
-            player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
-            return ActionResult.CONSUME;
+            player.openMenu(state.getMenuProvider(world, pos));
+            return InteractionResult.CONSUME;
         }
     }
 
     @Override
-    public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
+    public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
         if (state.getBlock() != newState.getBlock()) {
             BlockEntity blockEntity = world.getBlockEntity(pos);
             if (blockEntity instanceof FeedingTroughBlockEntity) {
-                ItemScatterer.spawn(world, pos, (FeedingTroughBlockEntity) blockEntity);
-                world.updateComparators(pos, this);
+                Containers.dropContents(world, pos, (FeedingTroughBlockEntity) blockEntity);
+                world.updateNeighbourForOutputSignal(pos, this);
             }
 
-            super.onStateReplaced(state, world, pos, newState, moved);
+            super.onRemove(state, world, pos, newState, moved);
         }
     }
 
     @Override
-    public boolean hasComparatorOutput(BlockState state) {
+    public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
     }
 
     @Override
-    public int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-        return ScreenHandler.calculateComparatorOutput(world.getBlockEntity(pos));
+    public int getAnalogOutputSignal(BlockState state, Level world, BlockPos pos) {
+        return AbstractContainerMenu.getRedstoneSignalFromBlockEntity(world.getBlockEntity(pos));
     }
 
     @Nullable
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new FeedingTroughBlockEntity(pos, state);
     }
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        if (world.isClient) {
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
+        if (world.isClientSide) {
             return null;
         }
 
-        return validateTicker(type, AnimalFeedingTroughMod.FEEDING_TROUGH_BLOCK_ENTITY.get(), (World wld, BlockPos pos, BlockState st, FeedingTroughBlockEntity blockEntity) -> {
+        return createTickerHelper(type, AnimalFeedingTroughMod.FEEDING_TROUGH_BLOCK_ENTITY.get(), (Level wld, BlockPos pos, BlockState st, FeedingTroughBlockEntity blockEntity) -> {
             FeedingTroughBlockEntity.tick(wld, pos, st, blockEntity);
             blockEntity.gatherExperienceOrbs(wld, pos);
         });
