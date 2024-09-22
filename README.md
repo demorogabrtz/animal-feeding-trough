@@ -1,7 +1,7 @@
 ## Animal Feeding Trough
 
-![Version 1.0.3](https://img.shields.io/badge/Version-1.0.3-brightgreen)
-![MC 1.20.1](https://img.shields.io/badge/Minecraft-1.20.1-blue)
+![Version 1.1.2](https://img.shields.io/badge/Version-1.1.2-brightgreen)
+![Supported Versions](https://cf.way2muchnoise.eu/versions/Minecraft_445838_all.svg)
 
 ![Requires Architectury API](https://i.imgur.com/VLsMyfv.png)
 
