@@ -10,7 +10,7 @@ architectury {
 version = "${rootProject.mod_version}+${rootProject.minecraft_version}-neoforge"
 
 loom {
-    // accessWidenerPath.set(project(":common").file("src/main/resources/animal_feeding_trough.accesswidener"))
+    accessWidenerPath = project(":common").loom.accessWidenerPath
 }
 
 configurations {

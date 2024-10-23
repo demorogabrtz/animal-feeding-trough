@@ -14,23 +14,23 @@ description = '''
 logoFile = "icon.png"
 
 [[dependencies.animal_feeding_trough]]
-modId = "neoforge"
+modId = "minecraft"
 type = "required"
-versionRange = "[21.1,)"
+versionRange = "[1.21.3,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.animal_feeding_trough]]
-modId = "minecraft"
+modId = "neoforge"
 type = "required"
-versionRange = "[1.21.1,)"
+versionRange = "[21.3.0-beta,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.animal_feeding_trough]]
 modId = "architectury"
 type = "required"
-versionRange = "[13,)"
+versionRange = "[14,)"
 ordering = "AFTER"
 side = "BOTH"
 
